@@ -32,6 +32,7 @@ func StringSum(input string) (output string, err error) {
 	}
 	// cleaning input string from trailing spaces
 	input = strings.TrimSpace(input)
+	input = strings.Replace(input, " ", "", -1)
 	operands := findOperandsWithSplit(input)
 	if checkForManyOperands(input, operands) {
 		return "", fmt.Errorf("errorNotTwoOperands: %w", errorNotTwoOperands)
