@@ -2,6 +2,10 @@ package string_sum
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 //use these errors as appropriate, wrapping them with fmt.Errorf function
@@ -23,5 +27,66 @@ var (
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
 func StringSum(input string) (output string, err error) {
-	return "", nil
+	if len(input) == 0 {
+		return "", fmt.Errorf("errorEmptyInput: %w", errorEmptyInput)
+	}
+	// cleaning input string from trailing spaces
+	input = strings.TrimSpace(input)
+	operands := findOperandsWithSplit(input)
+	if checkForManyOperands(input, operands) {
+		return "", fmt.Errorf("errorNotTwoOperands: %w", errorNotTwoOperands)
+	}
+	err = checkForNanOperands(input, operands)
+	if err != nil {
+		return "", err
+	}
+
+	output = calculate(input)
+	return output, nil
+}
+
+func findOperands(input string) []string {
+	re := regexp.MustCompile(`[+,-]?[0-9]+`)
+	return re.FindAllString(input, -1)
+}
+
+func findOperandsWithSplit(input string) []string {
+	pattern := regexp.MustCompile(`[+,-]{1}`)
+	operands := pattern.Split(input, -1)
+	return operands
+}
+
+func checkForManyOperands(input string, operands []string) bool {
+	if len(getEffectiveOperands(input, operands)) == 2 {
+		return false
+	}
+	return true
+}
+
+func getEffectiveOperands(input string, operands []string) []string {
+	if strings.HasPrefix(input, "+") || strings.HasPrefix(input, "-") {
+		return operands[1:]
+	}
+	return operands
+}
+
+func checkForNanOperands(input string, operands []string) error {
+	operands = getEffectiveOperands(input, operands)
+	for _, op := range operands {
+		_, err := strconv.Atoi(op)
+		if err != nil {
+			return fmt.Errorf("NaNOperandError: %w", err)
+		}
+	}
+	return nil
+}
+
+func calculate(input string) string {
+	operands := findOperands(input)
+	var sum int
+	for _, op := range operands {
+		n, _ := strconv.Atoi(op)
+		sum += n
+	}
+	return strconv.Itoa(sum)
 }
